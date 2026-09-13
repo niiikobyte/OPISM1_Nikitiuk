@@ -1,1 +1,0 @@
-# OPISM1_Nikitiuk
