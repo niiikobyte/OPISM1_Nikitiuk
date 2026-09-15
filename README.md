@@ -1,0 +1,416 @@
+# Практична робота № 1
+
+**Дисципліна:** Основи побудови інформаційних систем та мереж
+
+**Тема:** Спостереження за процесом звернення до вебресурсу. Побудова власної моделі рівнів взаємодії
+
+|||
+|-|-|
+|**Прізвище, ім'я**|Нікітюк Нікіта|
+|**Група**|ІПЗ-2.01|
+|**Номер варіанта**|22|
+|**Домен варіанта**|gimp.org|
+|**Середовище виконання**|*Windows*|
+|**Версія curl**|*curl 8.19.0 (Windows) libcurl/8.19.0 Schannel zlib/1.3.1 WinIDN WinLDAP*|
+|**Дата виконання**||
+
+\---
+
+## Частина A. Збір експериментальних даних
+
+### A.1. Запит із діагностичним виводом
+
+**Команда:**
+
+```
+curl.exe -v https://gimp.org
+```
+
+**Вивід:**
+
+```
+* Host gimp.org:443 was resolved.
+* IPv6: (none)
+* IPv4: 151.101.129.91, 151.101.193.91, 151.101.65.91, 151.101.1.91
+*   Trying 151.101.129.91:443...
+* schannel: disabled automatic use of client certificate
+* ALPN: curl offers http/1.1
+* ALPN: server accepted http/1.1
+* Established connection to gimp.org (151.101.129.91 port 443) from 192.168.3.218 port 63280
+* using HTTP/1.x
+> GET / HTTP/1.1
+> Host: gimp.org
+> User-Agent: curl/8.19.0
+> Accept: */*
+>
+* Request completely sent off
+* schannel: remote party requests renegotiation
+* schannel: renegotiating SSL/TLS connection
+* schannel: SSL/TLS connection renegotiated
+< HTTP/1.1 301 Moved Permanently
+< Connection: keep-alive
+< Content-Length: 229
+< server: Apache/2.4.62 (Red Hat Enterprise Linux) OpenSSL/3.5.5
+< location: https://www.gimp.org/
+< set-cookie: d645dec487b46fcf836fdeb374acd76b=8005124720d06af6f16de745e1fdb1fb; path=/; HttpOnly; Secure; SameSite=None
+< content-type: text/html; charset=iso-8859-1
+< Cache-Control: public, max-age=3600
+< Accept-Ranges: bytes
+< Date: Sun, 13 Sep 2026 15:33:05 GMT
+< Via: 1.1 varnish
+< Age: 482
+< X-Served-By: cache-fra-eddf8230151-FRA, cache-fra-eddf8230206-FRA
+< X-Cache: MISS, HIT
+< X-Cache-Hits: 0, 1
+< Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+<
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<html><head>
+<title>301 Moved Permanently</title>
+</head><body>
+<h1>Moved Permanently</h1>
+<p>The document has moved <a href="https://www.gimp.org/">here</a>.</p>
+</body></html>
+* Connection #0 to host gimp.org:443 left intact
+```
+
+\---
+
+### A.2. Запит без захисту з'єднання
+
+**Команда:**
+
+```
+curl.exe -v http://neverssl.com
+```
+
+**Вивід:**
+
+```
+* Host neverssl.com:80 was resolved.
+* IPv6: (none)
+* IPv4: 34.223.124.45
+*   Trying 34.223.124.45:80...
+* connect to 34.223.124.45 port 80 from 0.0.0.0 port 58994 failed: Timed out
+* Failed to connect to neverssl.com port 80 after 21143 ms: Could not connect to server
+* closing connection #0
+curl: (28) Failed to connect to neverssl.com port 80 after 21143 ms: Could not connect to server
+```
+
+\---
+
+### A.3. Запит до служби доменних імен
+
+**Команда (перше виконання):**
+
+```
+Resolve-DnsName gimp.org
+```
+
+**Вивід:**
+
+```
+Name                                           Type   TTL   Section    IPAddress
+----                                           ----   ---   -------    ---------
+gimp.org                                       AAAA   3600  Answer     2a04:4e42:200::347
+gimp.org                                       AAAA   3600  Answer     2a04:4e42:600::347
+gimp.org                                       AAAA   3600  Answer     2a04:4e42::347
+gimp.org                                       AAAA   3600  Answer     2a04:4e42:400::347
+gimp.org                                       A      1185  Answer     151.101.129.91
+gimp.org                                       A      1185  Answer     151.101.193.91
+gimp.org                                       A      1185  Answer     151.101.65.91
+gimp.org                                       A      1185  Answer     151.101.1.91
+```
+
+**Команда (повторне виконання через 5–7 хвилин):**
+
+```
+Resolve-DnsName gimp.org
+```
+
+**Вивід:**
+
+```
+Name                                           Type   TTL   Section    IPAddress
+----                                           ----   ---   -------    ---------
+gimp.org                                       AAAA   3250  Answer     2a04:4e42:200::347
+gimp.org                                       AAAA   3250  Answer     2a04:4e42:600::347
+gimp.org                                       AAAA   3250  Answer     2a04:4e42::347
+gimp.org                                       AAAA   3250  Answer     2a04:4e42:400::347
+gimp.org                                       A      835   Answer     151.101.129.91
+gimp.org                                       A      835   Answer     151.101.193.91
+gimp.org                                       A      835   Answer     151.101.65.91
+gimp.org                                       A      835   Answer     151.101.1.91
+```
+
+**Зафіксовані значення:**
+
+|Параметр|Перше виконання|Повторне виконання|
+|-|-|-|
+|Час виконання (год:хв)|19:05|19:12|
+|IP-адреса|151.101.129.91|151.101.129.91|
+|Значення TTL|1185|835|
+
+> Якщо друге значення TTL виявилося більшим за перше — це нормально: кеш резолвера встиг оновитися. Зафіксуйте як є.
+
+\---
+
+### A.4. Контрольний ресурс
+
+**Команда:**
+
+```
+curl.exe -v https://google.com
+```
+
+**Вивід:**
+
+```
+* Host google.com:443 was resolved.
+* IPv6: (none)
+* IPv4: 142.251.98.138, 142.251.98.139, 142.251.98.113, 142.251.98.101, 142.251.98.102, 142.251.98.100
+*   Trying 142.251.98.138:443...
+* schannel: disabled automatic use of client certificate
+* ALPN: curl offers http/1.1
+* ALPN: server accepted http/1.1
+* Established connection to google.com (142.251.98.138 port 443) from 192.168.3.218 port 49268
+* using HTTP/1.x
+> GET / HTTP/1.1
+> Host: google.com
+> User-Agent: curl/8.19.0
+> Accept: */*
+>
+* Request completely sent off
+* schannel: remote party requests renegotiation
+* schannel: renegotiating SSL/TLS connection
+* schannel: SSL/TLS connection renegotiated
+< HTTP/1.1 301 Moved Permanently
+< Location: https://www.google.com/
+< Content-Type: text/html; charset=UTF-8
+< Content-Security-Policy-Report-Only: object-src 'none';base-uri 'self';script-src 'nonce-KxIPKW5oG9GlNx0IJW93vQ' 'strict-dynamic' 'report-sample' 'unsafe-eval' 'unsafe-inline' https: http:;report-uri https://csp.withgoogle.com/csp/gws/other-hp
+< Date: Sun, 13 Sep 2026 16:15:50 GMT
+< Expires: Tue, 13 Oct 2026 16:15:50 GMT
+< Cache-Control: public, max-age=2592000
+< Server: gws
+< Content-Length: 220
+< X-XSS-Protection: 0
+< X-Frame-Options: SAMEORIGIN
+< Alt-Svc: h3=":443"; ma=2592000,h3-29=":443"; ma=2592000
+<
+<HTML><HEAD><meta http-equiv="content-type" content="text/html;charset=utf-8">
+<TITLE>301 Moved</TITLE></HEAD><BODY>
+<H1>301 Moved</H1>
+The document has moved
+<A HREF="https://www.google.com/">here</A>.
+</BODY></HTML>
+* Connection #0 to host google.com:443 left intact
+```
+
+\---
+
+### A.5. Ресурси з некоректною конфігурацією сертифіката
+
+**Випадок 1**
+
+```
+curl.exe -v https://expired.badssl.com
+```
+
+```
+* Host expired.badssl.com:443 was resolved.
+* IPv6: (none)
+* IPv4: 104.154.89.105
+*   Trying 104.154.89.105:443...
+* schannel: disabled automatic use of client certificate
+* ALPN: curl offers http/1.1
+* schannel: next InitializeSecurityContext failed: SEC_E_CERT_EXPIRED (0x80090328) - Получен сертификат с истекшим сроком действия.
+* closing connection #0
+curl: (35) schannel: next InitializeSecurityContext failed: SEC_E_CERT_EXPIRED (0x80090328) - Получен сертификат с истекшим сроком действия.
+```
+
+**Випадок 2**
+
+```
+curl.exe -v https://wrong.host.badssl.com
+```
+
+```
+* Host wrong.host.badssl.com:443 was resolved.
+* IPv6: (none)
+* IPv4: 104.154.89.105
+*   Trying 104.154.89.105:443...
+* schannel: disabled automatic use of client certificate
+* ALPN: curl offers http/1.1
+* schannel: SNI or certificate check failed: SEC_E_WRONG_PRINCIPAL (0x80090322) - Главное конечное имя неверно.
+* closing connection #0
+curl: (60) schannel: SNI or certificate check failed: SEC_E_WRONG_PRINCIPAL (0x80090322) - Главное конечное имя неверно.
+More details here: https://curl.se/docs/sslcerts.html
+
+curl failed to verify the legitimacy of the server and therefore could not
+establish a secure connection to it. To learn more about this situation and
+how to fix it, please visit the webpage mentioned above.
+```
+
+**Випадок 3**
+
+```
+curl.exe -v https://self-signed.badssl.com
+```
+
+```
+* Host self-signed.badssl.com:443 was resolved.
+* IPv6: (none)
+* IPv4: 104.154.89.105
+*   Trying 104.154.89.105:443...
+* schannel: disabled automatic use of client certificate
+* ALPN: curl offers http/1.1
+* schannel: SEC_E_UNTRUSTED_ROOT (0x80090325) - Цепочка сертификатов выпущена центром сертификации, не имеющим доверия.
+* closing connection #0
+curl: (60) schannel: SEC_E_UNTRUSTED_ROOT (0x80090325) - Цепочка сертификатов выпущена центром сертификации, не имеющим доверия.
+More details here: https://curl.se/docs/sslcerts.html
+
+curl failed to verify the legitimacy of the server and therefore could not
+establish a secure connection to it. To learn more about this situation and
+how to fix it, please visit the webpage mentioned above.
+```
+
+> Якщо використано альтернативний спосіб із параметром `--resolve` — зазначити це та навести фактичну команду.
+
+\---
+
+## Частина B. Власна модель рівнів
+
+**Кількість виділених груп:** \_\_\_
+
+|№|Назва групи (власне формулювання)|Рядки виводу, віднесені до групи|Обґрунтування|
+|-|-|-|-|
+|1|Невдалі виводи|A2; A5.|Невдалі з'єднання з доменом, яким не вдалося зв'язатися з доменом, у виводі написано помилку.|
+|2|Діагностичні виводи|A1; A4.|Отримання даних під час звернення до домену за допомогою команди `curl`.|
+|3|Запити DNS імені|A3|Звернення до домену командою `Resolve-DnsName`, та вивід данних DNS домену як IP-адреса, TTL и тип домену.|
+|4||||
+|5||||
+|6||||
+|7||||
+
+*Групи впорядковано від найближчої до користувача (№ 1) до найближчої до апаратного забезпечення. Зайві рядки вилучити, за потреби — додати.*
+
+**Рядки, які не вдалося віднести до жодної групи:**
+
+|Рядок виводу|Причина утруднення|
+|-|-|
+|||
+|||
+|||
+
+\---
+
+## Контрольні питання
+
+**1. Скільки рядків діагностичного виводу передує отриманню даних сторінки (завдання A.1)?**
+
+> 44 рядків діагностичного виводу.
+
+**2. Які рядки наявні у виводі A.1 і відсутні у виводі A.2? Чим це зумовлено?**
+
+> У А.1 наявні всі діагностичні рядкі про домен, а у виводі А.2 у виводі маеться лише адресса домену, і спроба зв'язатися з доменом, за якою слідує помилка.
+
+**3. Звідки у виводі з'явилося значення `443`, якщо його не було вказано в адресі?**
+
+> номер мережевого порту https.
+
+**4. Як змінилося значення TTL між двома запитами (A.3)? Що означає це число?**
+
+> з TLL: 1185 до TTL: 835. TTL - максимальний період часу або кількість ітерацій або переходів, за який набір даних (пакет) може існувати до свого зникнення. 
+
+**5. Чим відрізняються між собою три причини помилок із завдання A.5? Сформулювати кожну однією фразою.**
+
+|Випадок|Причина недовіри|
+|-|-|
+|`expired`|сертифікат просрочений|
+|`wrong.host`|сертифікат для іншого хоста|
+|`self-signed`|самопідписаний сертифікат|
+
+**6. Три рядки з власних виводів, про які не йшлося на лекції 1:**
+
+|№|Рядок виводу|Джерело (номер завдання)|
+|-|-|-|
+|1|content-type: text/html; charset=iso-8859-1|A1|
+|2|Cache-Control: public, max-age=3600|A1|
+|3|Accept-Ranges: bytes|A1|
+
+*Пояснення до цих рядків не потрібне.*
+
+\---
+
+## Висновки
+
+*150–300 слів. Спиратися на власні спостереження, а не на матеріал лекції.*
+
+У цій практичній роботі я завантажив інструмент curl версії 8.19.0 для оперативної системи Windows, призначенний для передачі даних між клієнтами та серверами за допомогою мереживих протоколів. У цій практичній работі мені було потрібно надсилати діагностичні та DNS запити до таких сайтів як gimp.org, neverssl.com, google.com, expired.badssl.com, wrong.host.badssl.com та self-signed.badssl.com. Сайти як gimp.org та google.com було успішно надійслано запити та було отримано дані у відповідь, коли усі інші сайти кожен видав свою унікальну помилку у відповідь.
+
+**D.1. Що виявилося неочевидним або несподіваним**
+
+*Назвати конкретно, з посиланням на рядок виводу.*
+
+> (А.1) Спочатку я вводив команду curl (без .exe) з спробою звернутися до сайту gimp, це спрацювало але потім я з'ясував що це зовсім інша команда а не яка мені потрібна. (А.3) При спробі надіслати DNS запит до сайту gimp я не зауважив що потрібно прибрати https://, і мені знадобилось кілька хвилин щоб з'ясувати своб помилку.
+
+**D.2. Чому саме така кількість груп у частині B**
+
+*На якій підставі ухвалено рішення. Що змусило б його змінити.*
+
+> Я розділив запити протоколів на групи на основі їх вихідних даних, за запитом діагостики деякі зайти надіслали потрібні дані а деякі відповіли помилкою, при успішному надісланні DNS запиту сайт gimp видав дані DNS протоколу.
+
+**D.3. Питання, яке залишилося без відповіді**
+
+> 
+
+\---
+
+## Використання штучного інтелекту
+
+*Розділ обов'язковий. Заповнюється незалежно від того, чи використовувався ШІ. Детальні вимоги — у документі «Політика використання технологій штучного інтелекту».*
+
+**Факт використання:** використано / не використано *(потрібне залишити)*
+
+**Установлений рівень для цієї роботи:** Р3 — ШІ як співвиконавець
+
+**Фактичний рівень використання:** Р\_\_\_
+
+### Використані системи
+
+|Система|Версія або модель|Період використання|
+|-|-|-|
+||||
+
+### Промпти
+
+*Наводити дослівно, у тому вигляді, у якому запит було надано системі. Переказ не приймається.*
+
+|№|Розділ роботи|Текст промпта|
+|-|-|-|
+|1|||
+|2|||
+|3|||
+
+### Дії з отриманим результатом
+
+|№ промпта|Що перевірено|Що змінено|Що відхилено і чому|
+|-|-|-|-|
+|1||||
+|2||||
+|3||||
+
+### Підтвердження
+
+Підтверджую, що всі наведені в цьому звіті виводи команд отримано мною особисто внаслідок фактичного виконання відповідних дій, а відомості цього розділу є повними та достовірними.
+
+> Виводи `curl`, `dig` та інші артефакти не можуть бути згенеровані. Це стосується будь-якого рівня використання ШІ.
+
+\---
+
+## Примітки виконавця
+
+*(необов'язковий розділ: що не спрацювало, які команди довелося змінити, які виникли труднощі)*
+
+> 
+
